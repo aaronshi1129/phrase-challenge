@@ -1,0 +1,403 @@
+<html><head><base href="https://codepen.io">
+<meta charset="UTF-8">
+<title>GAS English Phrase Challenge</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: white;
+    height: 100vh;
+    margin: 0;
+    padding: 20px;
+}
+
+.game-container {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    max-width: 800px;
+    width: 100%;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.columns {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.column {
+    width: 45%;
+}
+
+.phrase-line {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.phrase-part {
+    padding: 10px;
+    margin: 10px 0;
+    background: #f0f4f8;
+    border: 2px solid #dde4ed;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.phrase-part:hover {
+    background: #e0e7ff;
+}
+
+.selected {
+    background: #4a90e2;
+    color: white;
+}
+
+.correct {
+    background: #4caf50;
+    color: white;
+    cursor: default;
+}
+
+.incorrect {
+    animation: shake 0.5s;
+    background: #ff6b6b;
+    color: white;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
+.translation {
+    color: #666;
+    margin-left: 10px;
+    font-style: italic;
+}
+
+.timer {
+    font-size: 1.2em;
+    margin: 20px 0;
+    color: #2c3e50;
+}
+
+.reset-btn {
+    background: #4a90e2;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-top: 20px;
+    transition: background 0.3s ease;
+}
+
+.reset-btn:hover {
+    background: #357abd;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.modal-btn {
+    background: #4caf50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-top: 20px;
+    transition: background 0.3s ease;
+}
+
+.modal-btn:hover {
+    background: #45a049;
+}
+
+.pokemon-image {
+    width: 150px;
+    height: 150px;
+    margin: 15px auto;
+    border-radius: 10px;
+}
+</style>
+</head>
+<body>
+<div class="game-container">
+    <h1>GAS English Phrase Challenge</h1>
+    <p>Complete this challenge successfully to win a Pokemon!</p>
+    <div class="timer">Time: <span id="timer">0:00</span></div>
+    <div class="columns">
+        <div class="column" id="left-column">
+            <!-- Phrases will be inserted here -->
+        </div>
+        <div class="column" id="right-column">
+            <!-- Second parts will be inserted here -->
+        </div>
+    </div>
+    <button class="reset-btn" onclick="resetGame()">Reset Game</button>
+</div>
+
+<div class="modal" id="congratsModal">
+    <div class="modal-content">
+        <h2>Congratulations! 🎉</h2>
+        <img id="pokemonImage" class="pokemon-image" alt="Random Pokemon celebration image" src="" width="150" height="150">
+        <p id="congratsMessage"></p>
+        <button class="modal-btn" onclick="startNewGame()">Start New Game</button>
+    </div>
+</div>
+
+<script>
+const allPhrases = [
+    ["Once in a", "blue moon", "千載難逢"],
+    ["Break a", "leg", "祝你好運"],
+    ["Piece of", "cake", "小菜一碟"],
+    ["Hit the", "road", "上路、出發"],
+    ["Under the", "weather", "身體微恙"],
+    ["Beat around the", "bush", "拐彎抹角"],
+    ["Take it", "seriously", "認真看待這件事"],
+    ["Let you", "down", "讓你失望"],
+    ["Dress", "up like a clown", "裝扮成小丑"],
+    ["Don't take it", "personally", "別走心"],
+    ["In addition", "to this", "除此之外..."],
+    ["In", "fact", "事實上"],
+    ["Hang", "out with friends", "和朋友出去玩"],
+    ["According", "to statistics", "根據統計"],
+    ["Up", "to 1000 people", "高達一千人"],
+    ["For a", "while", "一陣子"],
+    ["On one's", "own", "獨自一人"],
+    ["Come", "along", "抵達、出現"],
+    ["Pack", "up", "收拾、打包"],
+    ["End", "up in prison", "最後結果是鋃鐺入獄"],
+    ["As", "always", "一直如此"],
+    ["All of a", "sudden", "突然間"],
+    ["Come", "across", "遇到；偶然碰見"],
+    ["Carry", "out a study", "執行研究"],
+    ["Turn", "out", "結果是"],
+    ["Due", "to this reason", "因為這個原因"],
+    ["Within arm's", "reach", "觸手可及"],
+    ["Line", "up", "排隊"],
+    ["Take advantage", "of this opportunity", "利用這個機會"],
+    ["Set", "up the computer", "設定這台電腦"],
+    ["Start", "off", "開始"],
+    ["Stand", "for WHO", "代表WHO"],
+    ["Get rid", "of bad luck", "擺脫壞運"],
+    ["When it", "comes to", "當談到……時"],
+    ["Look", " forward to", "期待..."],
+    ["Make a", "living", "謀生"],
+    ["Get carried", "away", "陶醉"],
+    ["As soon", "as", "一⋯⋯就⋯⋯"]
+];
+
+let phrases = [];
+let selectedLeft = null;
+let selectedRight = null;
+let matchedPairs = new Set();
+let timerInterval;
+let seconds = 0;
+
+async function getRandomPokemon() {
+    const randomId = Math.floor(Math.random() * 898) + 1;
+    try {
+        const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${randomId}`);
+        const data = await response.json();
+        return data.sprites.other['official-artwork'].front_default;
+    } catch (error) {
+        console.error('Error fetching Pokemon:', error);
+        return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png';
+    }
+}
+
+async function showCongratsModal() {
+    const modal = document.getElementById('congratsModal');
+    const message = document.getElementById('congratsMessage');
+    const pokemonImage = document.getElementById('pokemonImage');
+    
+    message.textContent = `You've completed the challenge in ${formatTime(seconds)}! And you've got this Pokemon as a reward!`;
+    
+    const pokemonUrl = await getRandomPokemon();
+    pokemonImage.src = pokemonUrl;
+    
+    modal.style.display = 'flex';
+}
+
+function selectRandomPhrases() {
+    const shuffled = [...allPhrases].sort(() => 0.5 - Math.random());
+    phrases = shuffled.slice(0, 6);
+}
+
+function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+function startTimer() {
+    clearInterval(timerInterval);
+    seconds = 0;
+    document.getElementById('timer').textContent = formatTime(seconds);
+    timerInterval = setInterval(() => {
+        seconds++;
+        document.getElementById('timer').textContent = formatTime(seconds);
+    }, 1000);
+}
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function createGame() {
+    selectRandomPhrases();
+    const leftColumn = document.getElementById('left-column');
+    const rightColumn = document.getElementById('right-column');
+    
+    const leftPhrases = phrases.map((phrase, index) => ({text: phrase[0], index: index}));
+    const rightPhrases = phrases.map((phrase, index) => ({text: phrase[1], index: index}));
+    
+    shuffle(leftPhrases);
+    shuffle(rightPhrases);
+    
+    leftColumn.innerHTML = '';
+    rightColumn.innerHTML = '';
+    
+    leftPhrases.forEach(phrase => {
+        const lineDiv = document.createElement('div');
+        lineDiv.className = 'phrase-line';
+        
+        const div = document.createElement('div');
+        div.className = 'phrase-part';
+        div.textContent = phrase.text;
+        div.dataset.index = phrase.index;
+        div.onclick = () => selectLeft(div);
+        
+        lineDiv.appendChild(div);
+        leftColumn.appendChild(lineDiv);
+    });
+    
+    rightPhrases.forEach(phrase => {
+        const div = document.createElement('div');
+        div.className = 'phrase-part';
+        div.textContent = phrase.text;
+        div.dataset.index = phrase.index;
+        div.onclick = () => selectRight(div);
+        rightColumn.appendChild(div);
+    });
+
+    startTimer();
+}
+
+function selectLeft(element) {
+    if (element.classList.contains('correct')) return;
+    
+    if (selectedLeft) {
+        selectedLeft.classList.remove('selected');
+    }
+    
+    element.classList.add('selected');
+    selectedLeft = element;
+    
+    checkMatch();
+}
+
+function selectRight(element) {
+    if (element.classList.contains('correct')) return;
+    
+    if (selectedRight) {
+        selectedRight.classList.remove('selected');
+    }
+    
+    element.classList.add('selected');
+    selectedRight = element;
+    
+    checkMatch();
+}
+
+function startNewGame() {
+    const modal = document.getElementById('congratsModal');
+    modal.style.display = 'none';
+    resetGame();
+}
+
+function checkMatch() {
+    if (selectedLeft && selectedRight) {
+        if (selectedLeft.dataset.index === selectedRight.dataset.index) {
+            selectedLeft.classList.remove('selected');
+            selectedRight.classList.remove('selected');
+            selectedLeft.classList.add('correct');
+            selectedRight.classList.add('correct');
+            matchedPairs.add(selectedLeft.dataset.index);
+            
+            const rightPart = selectedRight;
+            const leftPhraseLine = selectedLeft.parentElement;
+            rightPart.remove();
+            leftPhraseLine.appendChild(rightPart);
+            
+            const translationSpan = document.createElement('span');
+            translationSpan.className = 'translation';
+            translationSpan.textContent = `(${phrases[selectedLeft.dataset.index][2]})`;
+            leftPhraseLine.appendChild(translationSpan);
+            
+            if (matchedPairs.size === phrases.length) {
+                clearInterval(timerInterval);
+                setTimeout(showCongratsModal, 300);
+            }
+        } else {
+            selectedLeft.classList.add('incorrect');
+            selectedRight.classList.add('incorrect');
+            
+            setTimeout(() => {
+                selectedLeft.classList.remove('incorrect', 'selected');
+                selectedRight.classList.remove('incorrect', 'selected');
+            }, 1000);
+        }
+        
+        setTimeout(() => {
+            selectedLeft = null;
+            selectedRight = null;
+        }, 1000);
+    }
+}
+
+function resetGame() {
+    matchedPairs.clear();
+    createGame();
+}
+
+// Initialize the game
+createGame();
+</script>
+<div class="footer">Author: Aaron Shi. Released in 2024. Last update on November 23, 2024.</div>
+</body></html>
